@@ -1,8 +1,22 @@
 
-name: Test Prins Alexander availability
+name: Prins Alexander cloud monitor
 
 on:
   workflow_dispatch:
+    inputs:
+      test_telegram:
+        description: 'Send a Telegram test message only'
+        type: boolean
+        default: false
+  schedule:
+    - cron: '*/5 * * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prins-alexander-check
+  cancel-in-progress: false
 
 jobs:
   check:
@@ -15,11 +29,17 @@ jobs:
           python-version: '3.12'
       - run: pip install playwright==1.58.0
       - run: python -m playwright install --with-deps chromium
-      - run: python check.py
+      - name: Check availability or test Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TEST_TELEGRAM: ${{ inputs.test_telegram && 'true' || 'false' }}
+        run: python check.py
       - name: Save diagnostic screenshot
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: appointment-debug
           path: debug/
+          if-no-files-found: ignore
           retention-days: 1
