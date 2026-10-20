@@ -73,6 +73,14 @@ async def main():
 
             print('Appointment page:', appointment.url)
 
+            # Continue from quantity selection to location selection.
+            await appointment.get_by_role(
+                'button',
+                name='Verder'
+            ).click(timeout=15000)
+            
+            print('Clicked Verder')
+
             # Step 3: Find Prins Alexander.
             await appointment.get_by_text(
                 'Prins Alexander',
